@@ -44,7 +44,11 @@ func main() {
 	CheckIndex()
 
 	// Second, check mapping (and update)
-	em, _ := GetMapping()
+	em, errMapping := GetMapping()
+	if errMapping != nil {
+		log.Println("Error while getting mapping:", errMapping)
+		os.Exit(1)
+	}
 	for _, index := range em {
 		for key, mapping := range index.Mappings {
 			PutMapping(key, mapping)
@@ -61,6 +65,7 @@ func main() {
 
 	var x int64
 
+	// Loop through structure
 	for x = 0; x <= statsHit.Hits.Total; x = x + *bulkAmount {
 		log.Printf("Putting documents. %d%% Done (%d/%d)\n", int((float64(x)/float64(statsHit.Hits.Total))*100), x, statsHit.Hits.Total)
 
@@ -69,7 +74,11 @@ func main() {
 			log.Println("Error while fetching data:", err)
 			os.Exit(1)
 		}
-		bulk := results.Bulk()
+		bulk, errBulk := results.Bulk()
+		if errBulk != nil {
+			log.Println("Error while creating bulk data:", errBulk)
+			os.Exit(1)
+		}
 		ebp, errPut := Put(bulk)
 		if errPut != nil {
 			log.Println("Something went wrong posting data:", errPut)
@@ -78,7 +87,8 @@ func main() {
 
 		for _, item := range ebp.Items {
 			if item.Status != 200 && item.Status != 201 {
-				log.Println(item)
+				log.Println("Something went wrong posting data:", item)
+				os.Exit(1)
 			}
 		}
 

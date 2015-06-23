@@ -40,7 +40,7 @@ func Get(amount, from int64) (*ElasticSearchResponse, error) {
 	return elasticSearchResponse, nil
 }
 
-// GetMapping is
+// GetMapping gets mapping data from the source ElasticSearch server
 func GetMapping() (map[string]ElasticMapping, error) {
 	em := make(map[string]ElasticMapping)
 	client := &http.Client{}
@@ -68,7 +68,7 @@ func GetMapping() (map[string]ElasticMapping, error) {
 	return em, nil
 }
 
-// PutMapping is
+// PutMapping puts the mapping from the source ES server to the destination ES server
 func PutMapping(indexType string, mapping interface{}) error {
 	data, _ := json.Marshal(mapping)
 
@@ -80,27 +80,20 @@ func PutMapping(indexType string, mapping interface{}) error {
 	if errNR != nil {
 		return errNR
 	}
-	resp, errDO := client.Do(req)
+	_, errDO := client.Do(req)
 	if errDO != nil {
 		return errDO
 	}
 
-	//
-	_, errRA := ioutil.ReadAll(resp.Body)
-	if errRA != nil {
-		return errRA
-	}
-	resp.Body.Close()
-
 	return nil
 }
 
-// Put is
+// Put send the bulk data to the Bulk api
 func Put(data []byte) (*ElasticBulkResponse, error) {
 	client := &http.Client{}
 
 	url := fmt.Sprintf("http://%s:%s/_bulk", *destinationHostname, *destinationPort)
-	// log.Printf("Putting bulk data\n")
+
 	req, errNR := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	if errNR != nil {
 		return nil, errNR
@@ -117,12 +110,15 @@ func Put(data []byte) (*ElasticBulkResponse, error) {
 	resp.Body.Close()
 
 	ebr := &ElasticBulkResponse{}
-	json.Unmarshal(body, ebr)
+	errJSON := json.Unmarshal(body, ebr)
+	if errJSON != nil {
+		return nil, errJSON
+	}
 
 	return ebr, nil
 }
 
-// ElasticIndex is
+// ElasticIndex is the default index struct
 type ElasticIndex struct {
 	Index struct {
 		ID    string `json:"_id"`
@@ -132,17 +128,20 @@ type ElasticIndex struct {
 }
 
 // Bulk creates bulk data update
-func (e *ElasticSearchResponse) Bulk() []byte {
+func (e *ElasticSearchResponse) Bulk() ([]byte, error) {
 	var data []byte
 	var endLine = []byte("\n")
-	// Index
+
 	for _, hit := range e.Hits.Hits {
 		ei := ElasticIndex{}
 		ei.Index.Index = *destinationIndex
 		ei.Index.ID = hit.ID
 		ei.Index.Type = hit.Type
 
-		hitID, _ := json.Marshal(ei)
+		hitID, errJSON := json.Marshal(ei)
+		if errJSON != nil {
+			return []byte{}, errJSON
+		}
 		hitID = append(hitID, endLine...)
 
 		data = append(data, hitID...)
@@ -150,10 +149,10 @@ func (e *ElasticSearchResponse) Bulk() []byte {
 		data = append(data, endLine...)
 	}
 
-	return data
+	return data, nil
 }
 
-// CheckIndex is
+// CheckIndex checks if the index exists on destination and creates it if it is not.
 func CheckIndex() error {
 	client := &http.Client{}
 

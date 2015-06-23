@@ -31,12 +31,12 @@ type ElasticSearchHit struct {
 	Source  json.RawMessage `json:"_source"`
 }
 
-// ElasticMapping is
+// ElasticMapping is a placeholder for the elasticsearch mapping json
 type ElasticMapping struct {
 	Mappings map[string]interface{}
 }
 
-// ElasticBulkResponse {"took":7,"items":[{"create":{"_index":"test","_type":"type1","_id":"1","_version":1}}]}
+// ElasticBulkResponse is a placeholder for the bulk api response data
 type ElasticBulkResponse struct {
 	Took  int64
 	Items []struct {
