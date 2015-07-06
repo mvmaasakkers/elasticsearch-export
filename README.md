@@ -18,16 +18,16 @@ elasticexport -sh localhost -si indexa -dh otherhost -di indexa
 
 ## Command line options
 
-Key|Example|Description
--|-|-
-sh|localhost|Source host
-sp|9200|Port of source ES host
-si|index|Source index
-dh|otherhost|Destination host
-dp|9200|Port of destination ES host
-di|index|Destination index
-q|_all:*|Querystring query to select data
-ba|50|Bulk amount to define amount of data indexed per request.
+| Key | Example | Description |
+| - | - | - |
+| sh | localhost | Source host |
+| sp | 9200 | Port of source ES host |
+| si | index | Source index |
+| dh | otherhost | Destination host |
+| dp | 9200 | Port of destination ES host |
+| di | index | Destination index |
+| q | _all:* | Querystring query to select data |
+| ba | 50 | Bulk amount to define amount of data indexed per request. |
 
 # Changelog
 
