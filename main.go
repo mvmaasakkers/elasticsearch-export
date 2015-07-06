@@ -16,6 +16,8 @@ var destinationHostname = flag.String("dh", "localhost", "Hostname for destinati
 var destinationPort = flag.String("dp", "9200", "Port for destination")
 var destinationIndex = flag.String("di", "", "Index for destination")
 
+var query = flag.String("q", "", "Query for selection")
+
 var bulkAmount = flag.Int64("ba", 50, "Bulk amount")
 
 var (
@@ -56,7 +58,7 @@ func main() {
 	}
 
 	// Do a query with amount = 1 to get total amount of docs to export
-	statsHit, err := Get(1, 0)
+	statsHit, err := Get(1, 0, *query)
 	if err != nil {
 		log.Println("Error while fetching data:", err)
 		os.Exit(1)
@@ -69,7 +71,7 @@ func main() {
 	for x = 0; x <= statsHit.Hits.Total; x = x + *bulkAmount {
 		log.Printf("Putting documents. %d%% Done (%d/%d)\n", int((float64(x)/float64(statsHit.Hits.Total))*100), x, statsHit.Hits.Total)
 
-		results, errGet := Get(*bulkAmount, x)
+		results, errGet := Get(*bulkAmount, x, *query)
 		if errGet != nil {
 			log.Println("Error while fetching data:", err)
 			os.Exit(1)

@@ -7,13 +7,18 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	u "net/url"
 )
 
 // Get Executes the ES query and returns results in an ElasticSearchResponse struct
-func Get(amount, from int64) (*ElasticSearchResponse, error) {
+func Get(amount, from int64, query string) (*ElasticSearchResponse, error) {
 	client := &http.Client{}
 
 	url := fmt.Sprintf("http://%s:%s/%s/_search?size=%d&from=%d", *sourceHostname, *sourcePort, *sourceIndex, amount, from)
+
+	if query != "" {
+		url += fmt.Sprintf("&q=%s", u.QueryEscape(query))
+	}
 
 	req, errNR := http.NewRequest("GET", url, nil)
 	if errNR != nil {
